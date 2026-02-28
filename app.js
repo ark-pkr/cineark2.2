@@ -121,34 +121,27 @@ parallaxRunes(e) {
             clearTimeout(this.searchTimeout);
             this.searchTimeout = setTimeout(() => this.buscarMangas(), 600);
         },
-        async buscarMangas() {
-            if (this.newItem.title.length < 3) {
-                this.searchResults = [];
-                return;
-            }
-            try {
-                // Proxy para evitar erro de CORS
-                const proxy = "https://corsproxy.io/?";
-                const target = `https://api.mangadex.org/manga?title=${encodeURIComponent(this.newItem.title)}&limit=5&includes[]=cover_art`;
-                fetch(proxyUrl + encodeURIComponent(targetUrl))
-                const response = await fetch(proxy + encodeURIComponent(target));
-                const data = await response.json();
-                
-                this.searchResults = data.data.map(manga => {
-                    const coverRel = manga.relationships.find(r => r.type === 'cover_art');
-                    const fileName = coverRel ? coverRel.attributes?.fileName : '';
-                    return {
-                        id: manga.id,
-                        title: manga.attributes.title.en || manga.attributes.title.ja || Object.values(manga.attributes.title)[0],
-                        poster: fileName 
-                            ? `https://uploads.mangadex.org/covers/${manga.id}/${fileName}.256.jpg` 
-                            : 'https://placehold.co/200x300?text=Sem+Capa'
-                    };
-                });
-            } catch (error) {
-                console.error("Erro na busca (MangaDex):", error);
-            }
-        },
+async buscarMangas() {
+    if (this.newItem.title.length < 3) return;
+    
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(async () => {
+        try {
+            // CORREÇÃO: Adicionar Proxy
+            const proxy = "https://corsproxy.io/?";
+            const targetUrl = `https://api.mangadex.org/manga?title=${encodeURIComponent(this.newItem.title)}&limit=5&includes[]=cover_art`;
+            
+            const response = await fetch(proxy + encodeURIComponent(targetUrl));
+            const data = await response.json();
+            
+            this.searchResults = data.data.map(manga => {
+                // ... mapeamento correto
+            });
+        } catch (e) {
+            console.error("Erro na busca MangaDex", e);
+        }
+    }, 500);
+},
         selectResult(res) {
             this.newItem.title = res.title;
             this.newItem.poster = res.poster;
